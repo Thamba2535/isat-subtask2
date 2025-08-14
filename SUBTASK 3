@@ -1,0 +1,197 @@
+#include <iostream>
+#include <string>
+#include <iomanip>
+#include <limits>
+#include <vector> // Using vector instead of array for dynamic sizing
+using namespace std;
+
+const double PRICE_PER_MAGWINYA = 5.50; // Updated price
+const double DISCOUNT_THRESHOLD = 50.00; // Discount for large orders
+const double DISCOUNT_RATE = 0.10; // 10% discount
+
+struct Order {
+int orderID;
+string customerName;
+int quantity;
+double subtotal;
+double discount;
+double total;
+string specialRequests;
+};
+
+vector<Order> orders; // Using vector for dynamic storage
+int nextOrderID = 1001; // Starting with a 4-digit order ID
+
+void displayMenu() {
+cout << "\n=== Magwinya Delight Order System ===\n";
+cout << "1. Add New Order\n";
+cout << "2. View All Orders\n";
+cout << "3. Search Order by ID\n";
+cout << "4. Calculate Total Revenue\n";
+cout << "5. Generate Sales Report\n";
+cout << "6. Exit\n";
+cout << "Enter your choice (1-6): ";
+}
+
+void addNewOrder() {
+Order newOrder;
+newOrder.orderID = nextOrderID++;
+
+cout << "\n=== New Order (ID: " << newOrder.orderID << ") ===\n";
+
+cout << "Customer Name: ";
+cin.ignore();
+getline(cin, newOrder.customerName);
+
+while (true) {
+cout << "Quantity: ";
+if (cin >> newOrder.quantity && newOrder.quantity > 0) break;
+cout << "Invalid input! Please enter a positive number.\n";
+cin.clear();
+cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+
+cout << "Special Requests (or 'none'): ";
+cin.ignore();
+getline(cin, newOrder.specialRequests);
+
+// Calculate order amounts
+newOrder.subtotal = newOrder.quantity * PRICE_PER_MAGWINYA;
+newOrder.discount = (newOrder.subtotal >= DISCOUNT_THRESHOLD) ?
+newOrder.subtotal * DISCOUNT_RATE : 0.0;
+newOrder.total = newOrder.subtotal - newOrder.discount;
+
+orders.push_back(newOrder);
+
+cout << "\nOrder successfully added!\n";
+cout << "Total: R" << fixed << setprecision(2) << newOrder.total;
+if (newOrder.discount > 0) {
+cout << " (You saved R" << newOrder.discount << "!)";
+}
+cout << "\n";
+}
+
+void displayOrders() {
+if (orders.empty()) {
+cout << "\nNo orders to display.\n";
+return;
+}
+
+cout << "\n=== All Orders ===\n";
+cout << left << setw(10) << "ID" << setw(20) << "Customer"
+<< setw(10) << "Qty" << setw(10) << "Subtotal"
+<< setw(10) << "Discount" << setw(10) << "Total\n";
+cout << string(70, '-') << endl;
+
+for (const auto& order : orders) {
+cout << left << setw(10) << order.orderID
+<< setw(20) << order.customerName
+<< setw(10) << order.quantity
+<< "R" << setw(9) << fixed << setprecision(2) << order.subtotal
+<< "R" << setw(9) << order.discount
+<< "R" << order.total << "\n";
+}
+}
+
+void searchOrder() {
+if (orders.empty()) {
+cout << "\nNo orders to search.\n";
+return;
+}
+
+int searchID;
+cout << "\nEnter Order ID to search: ";
+cin >> searchID;
+
+for (const auto& order : orders) {
+if (order.orderID == searchID) {
+cout << "\n=== Order Details ===\n";
+cout << "Order ID: " << order.orderID << "\n";
+cout << "Customer: " << order.customerName << "\n";
+cout << "Quantity: " << order.quantity << "\n";
+cout << "Subtotal: R" << fixed << setprecision(2) << order.subtotal << "\n";
+if (order.discount > 0) {
+cout << "Discount: R" << order.discount << " ("
+<< (DISCOUNT_RATE*100) << "% off)\n";
+}
+cout << "Total: R" << order.total << "\n";
+if (order.specialRequests != "none") {
+cout << "Special Requests: " << order.specialRequests << "\n";
+}
+return;
+}
+}
+cout << "Order not found!\n";
+}
+
+void calculateRevenue() {
+if (orders.empty()) {
+cout << "\nNo orders to calculate.\n";
+return;
+}
+
+double totalRevenue = 0;
+double totalDiscounts = 0;
+int totalQuantity = 0;
+
+for (const auto& order : orders) {
+totalRevenue += order.total;
+totalDiscounts += order.discount;
+totalQuantity += order.quantity;
+}
+
+cout << "\n=== Sales Summary ===\n";
+cout << "Total Orders: " << orders.size() << "\n";
+cout << "Total Magwinyas Sold: " << totalQuantity << "\n";
+cout << "Total Discounts Given: R" << fixed << setprecision(2) << totalDiscounts << "\n";
+cout << "Gross Revenue: R" << totalRevenue + totalDiscounts << "\n";
+cout << "Net Revenue: R" << totalRevenue << "\n";
+}
+
+void generateReport() {
+if (orders.empty()) {
+cout << "\nNo orders to report.\n";
+return;
+}
+
+cout << "\n=== Sales Report ===\n";
+cout << "Magwinya Price: R" << fixed << setprecision(2) << PRICE_PER_MAGWINYA << " each\n";
+cout << "Discount: " << (DISCOUNT_RATE*100) << "% off orders over R"
+<< DISCOUNT_THRESHOLD << "\n\n";
+
+calculateRevenue();
+
+cout << "\nTop Customers:\n";
+// Simple implementation - would be better with a map in a real system
+if (orders.size() > 3) {
+cout << "1. " << orders[0].customerName << "\n";
+cout << "2. " << orders[1].customerName << "\n";
+cout << "3. " << orders[2].customerName << "\n";
+}
+}
+
+int main() {
+int choice;
+
+cout << "=== Welcome to Magwinya Delight Order System ===\n";
+
+do {
+displayMenu();
+cin >> choice;
+
+switch (choice) {
+case 1: addNewOrder(); break;
+case 2: displayOrders(); break;
+case 3: searchOrder(); break;
+case 4: calculateRevenue(); break;
+case 5: generateReport(); break;
+case 6: cout << "Exiting system...\n"; break;
+default:
+cout << "Invalid choice! Please enter 1-6.\n";
+cin.clear();
+cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+} while (choice != 6);
+
+return 0;
+}
